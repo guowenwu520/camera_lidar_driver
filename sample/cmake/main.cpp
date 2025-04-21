@@ -26,19 +26,22 @@ bool saveThreadRunning = true;
 std::string saveDir = "./saved_frames"; // 默认路径
 
 // 创建目录（如果不存在）
+
 void createDirectory(const std::string &dir)
 {
-#ifdef _WIN32
-	_mkdir(dir.c_str()); // Windows
-#else
-	mkdir(dir.c_str(), 0777); // Linux / macOS
-#endif
+	std::string cmd = "mkdir -p "+dir;
+    int ret = system(cmd.c_str());
+    if (ret != 0) {
+        std::cerr << "Failed to create directory using mkdir -p: " << dir << std::endl;
+    }
 }
-
-void savePointCloudAsKITTI(const benewake::BwPointCloud::Ptr &cloud, const std::string &dir, int frameNum)
+void savePointCloudAsKITTI(const benewake::BwPointCloud::Ptr &cloud, std::string dir, int number,int frameNum)
 {
-	createDirectory(dir); // 先创建目录
-
+	if(number<10)
+     	dir=dir+ "/0"+std::to_string(number)+"/velodyne";
+	else 
+     	dir=dir+ "/"+std::to_string(number)+"/velodyne";
+	createDirectory(dir);
 	std::ostringstream oss;
 	oss << dir << "/frame_" << std::setw(6) << std::setfill('0') << frameNum << ".bin";
 	std::ofstream ofs(oss.str(), std::ios::out | std::ios::binary);
@@ -100,7 +103,9 @@ int main(int argc, char **argv)
 	{
 		std::cout << "No path specified, using default path: " << saveDir << std::endl;
 	}
+	saveDir += "/Sequences";
 
+	createDirectory(saveDir);
 	std::string ip = "192.168.0.2";
 	benewake::BenewakeLidar lidar(ip, 2469); // init lidar driver
 	bool run = true;
@@ -163,6 +168,8 @@ int main(int argc, char **argv)
 		run = false;
 	}
 	benewake::SYS_INFO sys_info;
+	int number=0;
+	int cur_count_frame=0;
 	while (run)
 	{
 		succ = lidar.getData(pointCloud, nFrame, sys_info); // get a frame of point cloud
@@ -180,12 +187,12 @@ int main(int argc, char **argv)
 		{
 			// note that when set timestamp output format as 3 - GPS&PPS, time's unit is not second. See documents for details.
 			// printf("  sampling start at %llu.%09u, end at %llu.%09u\n",
-				//    pointCloud->points[0].timestamp_s, pointCloud->points[0].timestamp_ns,
-				//    pointCloud->points[points_amount - 1].timestamp_s, pointCloud->points[points_amount - 1].timestamp_ns);
+			//    pointCloud->points[0].timestamp_s, pointCloud->points[0].timestamp_ns,
+			//    pointCloud->points[points_amount - 1].timestamp_s, pointCloud->points[points_amount - 1].timestamp_ns);
 
-				   /*
-					* Do some work ...
-					*/
+			/*
+			 * Do some work ...
+			 */
 		}
 
 #ifdef _WIN32
@@ -203,7 +210,8 @@ int main(int argc, char **argv)
 		{
 			// 将保存点云任务放入线程池
 			pool->enqueue([=]
-						  { savePointCloudAsKITTI(pointCloud, saveDir, nFrame); });
+						  { savePointCloudAsKITTI(pointCloud, saveDir,number, cur_count_frame); });
+			cur_count_frame++;
 		}
 
 		char in = getInput();
@@ -218,6 +226,8 @@ int main(int argc, char **argv)
 		}
 		else if (in == 'E' || in == 'e')
 		{
+			number++;
+			cur_count_frame=0;
 			save_enabled = false;
 			std::cout << "[INFO] Stop saving frames." << std::endl;
 		}
