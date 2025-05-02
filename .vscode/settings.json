@@ -69,6 +69,9 @@
         "typeinfo": "cpp",
         "variant": "cpp",
         "regex": "cpp",
-        "shared_mutex": "cpp"
-    }
+        "shared_mutex": "cpp",
+        "*.def": "cpp",
+        "core": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
 }

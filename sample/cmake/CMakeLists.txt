@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 11)
 include_directories(${PROJECT_SOURCE_DIR}/../../include)
 link_directories(${PROJECT_SOURCE_DIR}/../../build/Release)
 #add_definitions()
-add_executable(sample main.cpp thread_pool.cpp)
+add_executable(sample main.cpp thread_pool.cpp SocketServer.h SocketServer.cpp SocketClient.cpp SocketClient.h File_uitl.cpp Benewakelidar.cpp Globals.cpp Globals.h)
 
 
 IF (WIN32)
