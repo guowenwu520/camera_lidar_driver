@@ -7,6 +7,7 @@ class Config {
 public:
     static std::string select_path;
     static bool running;
+    static bool stopRun;
 };
 
 #endif

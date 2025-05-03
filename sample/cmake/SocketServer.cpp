@@ -37,21 +37,8 @@ SocketServer::~SocketServer()
 {
     close(server_fd);
 }
-
-void SocketServer::start()
+std::string SocketServer::get_init_info( FileManager &fileManager,BenewakeLidarManager &benewakeLidarManager)
 {
-    socklen_t len = sizeof(client_addr);
-    client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &len);
-    if (client_fd < 0)
-    {
-        perror("Accept failed");
-        return;
-    }
-
-    std::cout << "Client connected!" << std::endl;
-    FileManager fileManager = FileManager();
-    BenewakeLidarManager benewakeLidarManager = BenewakeLidarManager(fileManager);
-    benewakeLidarManager.initialize();
     std::string link_status = "OK";
     std::string is_has_UP = (fileManager.isHasUsb() ? "True" : "False");
     std::string up_path = (fileManager.isHasUsb() ? fileManager.get_usb_mounts()[0] : "");
@@ -79,8 +66,25 @@ void SocketServer::start()
                             ",root_path:" + root_path +
                             ",current_file:" + current_file_str +
                             "}";
-    send(client_fd, init_info.c_str(), init_info.size(), 0);
+    return init_info;                        
+}
 
+void SocketServer::start()
+{
+    socklen_t len = sizeof(client_addr);
+    client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &len);
+    if (client_fd < 0)
+    {
+        perror("Accept failed");
+        return;
+    }
+
+    std::cout << "Client connected!" << std::endl;
+    FileManager fileManager = FileManager();
+    BenewakeLidarManager benewakeLidarManager = BenewakeLidarManager(fileManager);
+    benewakeLidarManager.initialize();
+    std::string init_info = get_init_info(fileManager, benewakeLidarManager);
+    send(client_fd, init_info.c_str(), init_info.size(), 0);
     handle_client(client_fd, benewakeLidarManager, fileManager);
     close(client_fd);
 }
@@ -182,7 +186,14 @@ std::string SocketServer::process_command(const std::string &command,
     }
     else if (cmd == "det_path")
     {
-        return "Delete path: " + arg + "\n";
+        fileManager.deleteFile(arg);
+        std::string init_info = get_init_info(fileManager, benewakeLidarManager);
+        return init_info;
+    }
+    else if (cmd == "close")
+    {
+        Config::stopRun = false;
+        return "The program has been closed and the service needs to be restarted";
     }
     else
     {

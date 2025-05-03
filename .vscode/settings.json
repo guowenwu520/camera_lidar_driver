@@ -71,7 +71,8 @@
         "regex": "cpp",
         "shared_mutex": "cpp",
         "*.def": "cpp",
-        "core": "cpp"
+        "core": "cpp",
+        "*.inc": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

@@ -71,16 +71,14 @@ public:
     bool deleteFile(const std::string &filename)
     {
         std::string path = root_path + filename;
-        if (rmdir(path.c_str()) == 0)
+        std::string cmd = "rm -r -f " + path;
+        int ret = system(cmd.c_str());
+        if (ret != 0)
         {
-            std::cout << "Deleted folder: " << path << std::endl;
-            return true;
-        }
-        else
-        {
-            perror(("rmdir failed: " + path).c_str());
+            std::cerr << "Failed to create directory using mkdir -p: " << path << std::endl;
             return false;
         }
+        return true;
     }
 
     std::vector<std::string> get_usb_mounts()

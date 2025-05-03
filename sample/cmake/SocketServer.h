@@ -27,6 +27,7 @@ private:
     struct sockaddr_in server_addr, client_addr;
     void handle_client(int client_socket, BenewakeLidarManager &benewakeLidarManager, FileManager &fileManager);
     std::string dealBeneWakeLidar(BenewakeLidarManager &benewakeLidarManager, bool isOFF);
+    std::string get_init_info( FileManager &fileManager,BenewakeLidarManager &benewakeLidarManager);
     std::string process_command(const std::string &command,
                                 BenewakeLidarManager &benewakeLidarManager,
                                 FileManager &fileManager);
