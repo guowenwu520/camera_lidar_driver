@@ -111,7 +111,7 @@ private:
         int nFrame = 0;
         Config::running = true;
         // 注意路径为空
-        dir = fileManager.getSavePath();
+        dir = fileManager.getSavePath(1);
         if (dir.length() <= 0)
         {
             std::cout << "select save_path" << std::endl;

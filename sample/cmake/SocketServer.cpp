@@ -40,8 +40,8 @@ SocketServer::~SocketServer()
 std::string SocketServer::get_init_info( FileManager &fileManager,BenewakeLidarManager &benewakeLidarManager)
 {
     std::string link_status = "OK";
-    std::string is_has_UP = (fileManager.isHasUsb() ? "True" : "False");
-    std::string up_path = (fileManager.isHasUsb() ? fileManager.get_usb_mounts()[0] : "");
+    std::string is_has_UP = (fileManager.is_usb_inserted() ? "True" : "False");
+    std::string up_path = (fileManager.is_usb_inserted() ? fileManager.create_usb_session_folder() : "");
     bool has_lidar_64 = false;
     bool has_lidar_248 = benewakeLidarManager.hasLidar();
     std::string root_path = fileManager.getRootPath();
@@ -174,14 +174,14 @@ std::string SocketServer::process_command(const std::string &command,
     else if (cmd == "create_path")
     {
         bool success = fileManager.createDirectory(arg);
-        std::string return_info = "({status: " + std::string(success ? "1" : "0") +
-                                  ", error: " + "" + "})";
+        std::string return_info = "{status: " + std::string(success ? "1" : "0") +
+                                  ", error: " + "" + "}";
         return return_info;
     }
     else if (cmd == "select_path")
     {
         fileManager.setSavePath(arg);
-        std::string return_info = "({status: 1, error: })";
+        std::string return_info = "{status: 1, error: }";
         return return_info;
     }
     else if (cmd == "det_path")
@@ -189,6 +189,16 @@ std::string SocketServer::process_command(const std::string &command,
         fileManager.deleteFile(arg);
         std::string init_info = get_init_info(fileManager, benewakeLidarManager);
         return init_info;
+    }
+    else if (cmd == "export_data_to_usb"){
+        std::string src_path = fileManager.getRootPath() + fileManager.getSavePath(1);
+        std::string dst_path = fileManager.create_usb_session_folder();
+        std::string ret_info = fileManager.move_folder_contents(src_path, dst_path);
+        std::string return_info = "{status: 1 , error: }";
+        if (ret_info!=""){
+           return_info = "{status: 0 , error:"+ret_info+" }";
+        }    
+        return return_info;
     }
     else if (cmd == "close")
     {

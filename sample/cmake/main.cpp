@@ -30,8 +30,8 @@ int main(int argc, char **argv)
 	std::this_thread::sleep_for(std::chrono::seconds(2));
 
 	// 客户端交互
-	//
-	// SocketClient client("127.0.0.1", 8080);
+
+	// SocketClient client("127.0.0.1", 8081);
 	// if (client.connect_to_server())
 	// {
 	// 	client.send_message("create_path:ram");
@@ -40,6 +40,7 @@ int main(int argc, char **argv)
 	// 	client.send_message("select_path:ram");
 	// 	client.receive_response();
 
+		
 	// 	client.send_message("256_line_ladar_start");
 	// 	client.receive_response();
 
@@ -47,6 +48,8 @@ int main(int argc, char **argv)
 	// 	client.send_message("256_line_ladar_end");
 	// 	client.receive_response();
 
+    //     client.send_message("export_data_to_usb");
+	// 	client.receive_response();
 	// 	// client.send_message("det_path:ram");
 	// 	// client.receive_response();
 

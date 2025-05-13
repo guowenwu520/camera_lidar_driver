@@ -34,25 +34,47 @@ public:
     void setSavePath(std::string name)
     {
         // select_path = root_path + name + "/Sequences";
-        Config::select_path = name + "/Sequences";
+        Config::select_path = name + "/";
         // std::cout << "select + path ;" << Config::select_path << std::endl;
     }
 
     int getPathCount(std::string dir)
     {
-        dir=root_path+dir;
+        dir = root_path + dir;
         std::vector<std::string> current_files = get_subdirectories(dir);
         int number = 0;
         for (size_t i = 0; i < current_files.size(); ++i)
         {
-            number = std::max(number,std::stoi(current_files[i]));
+            number = std::max(number, std::stoi(current_files[i]));
         }
-        return number+1;
+        return number + 1;
     }
 
-    std::string getSavePath()
+    std::string getSavePath(int type)
     {
-        return Config::select_path;
+        std::string base_path = Config::select_path;
+        std::string full_path;
+
+        if (type == 1)
+        {
+            full_path = base_path + Config::lidar_256_path + "/Sequences";
+        }
+        else if (type == 2)
+        {
+            full_path = base_path + Config::lidar_64_path + "/Sequences";
+        }
+        else if (type == 3)
+        {
+            full_path = base_path + "/Sequences";
+        }
+        else
+        {
+            // 处理无效类型
+            full_path = base_path;
+        }
+
+        Config::save_type = type;
+        return full_path;
     }
 
     bool createDirectory(const std::string &namefile)
@@ -81,51 +103,106 @@ public:
         return true;
     }
 
-    std::vector<std::string> get_usb_mounts()
+    bool is_usb_inserted()
     {
-        std::vector<std::string> usb_paths;
+        const std::string usb_mount_path = "/mnt/usb";
 
-        // 获取当前用户名对应的挂载目录
-        const char *home = getenv("HOME");
-        std::string media_path = std::string("/media/") + (home ? std::string(getpwuid(getuid())->pw_name) : "user");
+        struct stat st;
+        // 判断 /mnt/usb 是否存在并且是目录
+        if (stat(usb_mount_path.c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
+        {
+            return false; // 目录不存在或不是目录
+        }
 
-        DIR *dir = opendir(media_path.c_str());
+        // 判断该目录是否包含内容（非 . 和 ..）
+        DIR *dir = opendir(usb_mount_path.c_str());
         if (!dir)
         {
-            // perror(("无法打开目录: " + media_path).c_str());
-            return usb_paths;
+            return false;
         }
 
         struct dirent *entry;
         while ((entry = readdir(dir)) != nullptr)
         {
             std::string name = entry->d_name;
-            if (name == "." || name == "..")
-                continue;
-
-            std::string full_path = media_path + "/" + name;
-            struct stat st;
-            if (stat(full_path.c_str(), &st) == 0 && S_ISDIR(st.st_mode))
+            if (name != "." && name != "..")
             {
-                usb_paths.push_back(full_path);
+                closedir(dir);
+                return true; // 有内容，认为 U 盘存在
             }
         }
 
         closedir(dir);
-        return usb_paths;
+        return false; // 目录为空，可能未插入 U 盘
     }
 
-    bool isHasUsb()
+    std::string create_usb_session_folder()
     {
-        auto usb_paths = get_usb_mounts();
-        if (usb_paths.empty())
+        const std::string usb_mount_path = "/mnt/usb";
+        return usb_mount_path;
+    }
+
+    std::string get_parent_path(const std::string &path)
+    {
+        size_t pos = path.find_last_of("/\\");
+        if (pos == std::string::npos)
+            return ""; // 无法找到分隔符
+        return path.substr(0, pos);
+    }
+
+    bool is_directory(const std::string &path)
+    {
+        struct stat st;
+        return stat(path.c_str(), &st) == 0 && S_ISDIR(st.st_mode);
+    }
+
+    bool create_directory(const std::string &path)
+    {
+        return mkdir(path.c_str(), 0755) == 0 || errno == EEXIST;
+    }
+
+    bool move_item(const std::string &src, const std::string &dst)
+    {
+        if(is_directory(dst)){
+            std::string cmd1 = "rm -r -f " + dst;
+            int ret = system(cmd1.c_str());
+        }
+        std::string cmd = "mv \"" + src + "\" \"" + dst + "\"";
+        int ret = system(cmd.c_str());
+        if (ret != 0)
         {
+            std::cerr << "Failed to move item from " << src << " to " << dst << std::endl;
             return false;
         }
-        else
+        return true;
+    }
+
+    std::string move_folder_contents(std::string &src_folder, const std::string &dst_folder)
+    {
+        if (!is_directory(src_folder))
         {
-            return true;
+            return "源目录不存在: " + src_folder;
         }
+
+        if (!is_directory(dst_folder))
+        {
+            return "目标目录不存在: " + src_folder;
+        }
+
+        DIR *dir = opendir(src_folder.c_str());
+        if (!dir)
+        {
+            return "无法打开源目录: " + src_folder + " 请先录制数据";
+        }
+        src_folder = get_parent_path(src_folder);
+        src_folder = get_parent_path(src_folder);
+        if (!move_item(src_folder, dst_folder))
+        {
+            return "移动失败: " + src_folder + " -> " + dst_folder;
+        }
+
+        closedir(dir);
+        return "";
     }
 
     void savePointCloudAsKITTI(const benewake::BwPointCloud::Ptr &cloud, int number, std::string dir, int frameNum)
