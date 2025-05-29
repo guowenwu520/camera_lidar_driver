@@ -86,7 +86,7 @@ int main()
 	LidarObserver lidarObserver;
 	//example:Duetto
 	//online:
-	auto lidar = ILidarDevice::Create("192.168.111.51", "192.168.111.10", 5600, 5700, &lidarObserver, LT_Duetto);  
+	auto lidar = ILidarDevice::Create("192.168.111.51", "192.168.111.204", 5600, 5700, &lidarObserver, LT_FocusB2_B3_MP);  
 	//if lidar has separate IMU port 5800:
 	// auto lidar = ILidarDevice::Create("192.168.111.51", "192.168.111.204", 5600, 5700, &lidarObserver, LT_TW360,false,0,5800);  
 	
@@ -94,7 +94,7 @@ int main()
 	//auto lidar = ILidarDevice::Create("test.pcap", "192.168.111.51", 5600, 5700, &lidarObserver, LT_Duetto, true);  //pcap包路径使用绝对路径
 	
 	//use algo:
-	auto algo = ILidarAlgo::Create(LT_Duetto, "/root/workspace/CollectionControlServer/tanwaylidar/config/algo_table.json");  //json文件路径使用绝对路径
+	auto algo = ILidarAlgo::Create(LT_FocusB2_B3_MP, "/root/workspace/CollectionControlServer/tanwaylidar/config/algo_table.json");  //json文件路径使用绝对路径
 	lidar->SetLidarAlgo(algo.get());
 	
 	//start lidar
