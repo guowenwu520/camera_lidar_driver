@@ -86,6 +86,7 @@ int main()
 	LidarObserver lidarObserver;
 	//example:Duetto
 	//online:
+	// 接收端口不要改
 	auto lidar = ILidarDevice::Create("192.168.111.51", "192.168.111.204", 5600, 5700, &lidarObserver, LT_FocusB2_B3_MP);  
 	//if lidar has separate IMU port 5800:
 	// auto lidar = ILidarDevice::Create("192.168.111.51", "192.168.111.204", 5600, 5700, &lidarObserver, LT_TW360,false,0,5800);  
