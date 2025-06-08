@@ -13,6 +13,7 @@ public:
     static std::string lidar_64_path;
     static std::string lidar_256_path;
 
+    static std::string usb_path;
     static bool running;
     static bool stopRun;
 };

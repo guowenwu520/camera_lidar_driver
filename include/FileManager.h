@@ -24,12 +24,14 @@ public:
     std::vector<std::string> getFileChildPaths();
     void setSavePath(std::string name);
     int getPathCount(std::string dir);
-    std::string getSavePath(int type);
+    std::string getSavePath();
+    std::string get_256_lidar_save_path();
+    std::string get_64_lidar_save_path();
 
     bool createDirectory(const std::string &namefile);
     bool deleteFile(const std::string &filename);
     bool is_usb_inserted();
-    std::string create_usb_session_folder();
+    std::string get_usb_session_folder();
     std::string get_parent_path(const std::string &path);
     bool is_directory(const std::string &path);
     bool create_directory(const std::string &path);

@@ -12,7 +12,9 @@ std::vector<std::string> FileManager::getFileChildPaths()
 
 void FileManager::setSavePath(std::string name)
 {
-    Config::select_path = name + "/";
+
+    std::string dir = root_path + name;
+    Config::select_path = dir + "/";
 }
 
 int FileManager::getPathCount(std::string dir)
@@ -27,20 +29,21 @@ int FileManager::getPathCount(std::string dir)
     return number + 1;
 }
 
-std::string FileManager::getSavePath(int type)
+std::string FileManager::getSavePath()
 {
-    std::string base_path = Config::select_path;
-    std::string full_path;
+   return  Config::select_path;
+}
 
-    switch (type)
-    {
-        case 1: full_path = base_path + Config::lidar_256_path + "/Sequences"; break;
-        case 2: full_path = base_path + Config::lidar_64_path + "/Sequences"; break;
-        case 3: full_path = base_path + "/Sequences"; break;
-        default: full_path = base_path;
-    }
 
-    Config::save_type = type;
+std::string FileManager::get_256_lidar_save_path()
+{
+    std::string full_path = Config::select_path + Config::lidar_256_path + "/Sequences";
+    return full_path;
+}
+
+std::string FileManager::get_64_lidar_save_path()
+{
+    std::string full_path = Config::select_path + Config::lidar_64_path + "/Sequences";
     return full_path;
 }
 
@@ -60,34 +63,25 @@ bool FileManager::deleteFile(const std::string &filename)
 
 bool FileManager::is_usb_inserted()
 {
-    const std::string usb_mount_path = "/mnt/usb";
-    struct stat st;
+    const std::string usb_mount_path = get_usb_session_folder();
+    struct stat mount_stat, parent_stat;
 
-    if (stat(usb_mount_path.c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
+    // 获取挂载点本身的属性
+    if (stat(usb_mount_path.c_str(), &mount_stat) != 0)
         return false;
 
-    DIR *dir = opendir(usb_mount_path.c_str());
-    if (!dir)
+    // 获取其父目录的属性
+    std::string parent_path = usb_mount_path.substr(0, usb_mount_path.find_last_of('/'));
+    if (stat(parent_path.c_str(), &parent_stat) != 0)
         return false;
 
-    struct dirent *entry;
-    while ((entry = readdir(dir)) != nullptr)
-    {
-        std::string name = entry->d_name;
-        if (name != "." && name != "..")
-        {
-            closedir(dir);
-            return true;
-        }
-    }
-
-    closedir(dir);
-    return false;
+    // 判断是否为挂载点（设备号不同）
+    return mount_stat.st_dev != parent_stat.st_dev;
 }
 
-std::string FileManager::create_usb_session_folder()
+std::string FileManager::get_usb_session_folder()
 {
-    return "/mnt/usb";
+    return Config::usb_path;
 }
 
 std::string FileManager::get_parent_path(const std::string &path)

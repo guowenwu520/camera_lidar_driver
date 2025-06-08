@@ -24,7 +24,6 @@ public:
     bool hasLidar() const;
     void start();
     void stop();
-    std::string getSave_Path();
 
 private:
     std::string lidar_ip;

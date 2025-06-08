@@ -34,12 +34,12 @@ SocketServer::~SocketServer()
 {
     close(server_fd);
 }
-std::string SocketServer::get_init_info( FileManager &fileManager,BenewakeLidarManager &benewakeLidarManager)
+std::string SocketServer::get_init_info( FileManager &fileManager,BenewakeLidarManager &benewakeLidarManager,TanwayLidarManager &tanwayLidarManager)
 {
     std::string link_status = "OK";
     std::string is_has_UP = (fileManager.is_usb_inserted() ? "True" : "False");
-    std::string up_path = (fileManager.is_usb_inserted() ? fileManager.create_usb_session_folder() : "");
-    bool has_lidar_64 = false;
+    std::string up_path = (fileManager.is_usb_inserted() ? fileManager.get_usb_session_folder() : "");
+    bool has_lidar_64 = tanwayLidarManager.hasLidar();
     bool has_lidar_248 = benewakeLidarManager.hasLidar();
     std::string root_path = fileManager.getRootPath();
     std::vector<std::string> current_files = fileManager.getFileChildPaths();
@@ -80,13 +80,15 @@ void SocketServer::start()
     FileManager fileManager = FileManager();
     BenewakeLidarManager benewakeLidarManager = BenewakeLidarManager(fileManager);
     benewakeLidarManager.initialize();
-    std::string init_info = get_init_info(fileManager, benewakeLidarManager);
+    TanwayLidarManager tanwayLidarManager = TanwayLidarManager(fileManager);
+    tanwayLidarManager.initialize();
+    std::string init_info = get_init_info(fileManager, benewakeLidarManager,tanwayLidarManager);
     send(client_fd, init_info.c_str(), init_info.size(), 0);
-    handle_client(client_fd, benewakeLidarManager, fileManager);
+    handle_client(client_fd, fileManager, benewakeLidarManager,tanwayLidarManager);
     close(client_fd);
 }
 
-void SocketServer::handle_client(int client_socket, BenewakeLidarManager &benewakeLidarManager, FileManager &fileManager)
+void SocketServer::handle_client(int client_socket, FileManager &fileManager,BenewakeLidarManager &benewakeLidarManager,TanwayLidarManager &tanwayLidarManager)
 {
     char buffer[1024];
     while (true)
@@ -100,12 +102,45 @@ void SocketServer::handle_client(int client_socket, BenewakeLidarManager &benewa
         }
 
         std::string received(buffer);
-        std::string response = process_command(received, benewakeLidarManager, fileManager);
+        std::string response = process_command(received, fileManager, benewakeLidarManager,tanwayLidarManager);
         send(client_socket, response.c_str(), response.size(), 0);
     }
 }
 
-std::string SocketServer::dealBeneWakeLidar(BenewakeLidarManager &benewakeLidarManager, bool isStart)
+std::string SocketServer::dealTanwayLidar(TanwayLidarManager &tanwayLidarManager,  std::string save_path, bool isStart)
+{
+    std::string status = "1", error = "";
+
+    if (tanwayLidarManager.hasLidar())
+    {
+        if (isStart)
+        {
+            std::thread task_thread([&tanwayLidarManager]()
+                                    { tanwayLidarManager.start(); });
+            task_thread.detach(); // 后台运行
+        }
+        else
+        {
+            tanwayLidarManager.stop();
+        }
+    }
+    else
+    {
+        status = "0";
+        error = "Tanway Lidar 不存在";
+    }
+
+    std::string return_info = "{status: " + status +
+                              ", path: " + save_path +
+                              ", log: " + "\"nono\"" +
+                              ", error: " + "\"" + error + "\"" +
+                              "}";
+
+    return return_info;
+}
+
+
+std::string SocketServer::dealBeneWakeLidar(BenewakeLidarManager &benewakeLidarManager, std::string save_path, bool isStart)
 {
     std::string status = "1", error = "";
 
@@ -125,18 +160,17 @@ std::string SocketServer::dealBeneWakeLidar(BenewakeLidarManager &benewakeLidarM
     else
     {
         status = "0";
-        error = "lidar 不存在";
+        error = "benewake lidar 不存在";
     }
-    std::string return_info = "({status: " + status +
-                              ", path: " + benewakeLidarManager.getSave_Path() +
+    std::string return_info = "{status: " + status +
+                              ", path: " + save_path +
                               ", log: " + "nono" +
                               ", error: " + error +
-                              "})";
+                              "}";
     return return_info;
 }
 std::string SocketServer::process_command(const std::string &command,
-                                          BenewakeLidarManager &benewakeLidarManager,
-                                          FileManager &fileManager)
+                                         FileManager &fileManager,BenewakeLidarManager &benewakeLidarManager,TanwayLidarManager &tanwayLidarManager)
 {
     // 拆分命令名与参数
     auto pos = command.find(':');
@@ -145,29 +179,31 @@ std::string SocketServer::process_command(const std::string &command,
 
     if (cmd == "64_line_ladar_start")
     {
-        return "None\n";
+        return dealTanwayLidar(tanwayLidarManager,fileManager.get_64_lidar_save_path(), true);
     }
     else if (cmd == "64_line_ladar_end")
     {
-        return "None\n";
+        return dealTanwayLidar(tanwayLidarManager,fileManager.get_64_lidar_save_path(), false);
     }
     else if (cmd == "256_line_ladar_start")
     {
-        return dealBeneWakeLidar(benewakeLidarManager, true);
+        return dealBeneWakeLidar(benewakeLidarManager,fileManager.get_256_lidar_save_path(), true);
     }
     else if (cmd == "256_line_ladar_end")
     {
 
-        return dealBeneWakeLidar(benewakeLidarManager, false);
+        return dealBeneWakeLidar(benewakeLidarManager,fileManager.get_256_lidar_save_path(), false);
     }
-    else if (cmd == "line_ladar_start")
+    // 同时采集
+    else if (cmd == "together_start")
     {
         return "Hello Client!\n";
     }
-    else if (cmd == "line_ladar_end")
+    else if (cmd == "together_end")
     {
         return "Goodbye Client!\n";
     }
+    // 创建保存目录
     else if (cmd == "create_path")
     {
         bool success = fileManager.createDirectory(arg);
@@ -175,28 +211,36 @@ std::string SocketServer::process_command(const std::string &command,
                                   ", error: " + "" + "}";
         return return_info;
     }
+    // 选择保存目录
     else if (cmd == "select_path")
     {
         fileManager.setSavePath(arg);
         std::string return_info = "{status: 1, error: }";
         return return_info;
     }
+    // 删除指定目录
     else if (cmd == "det_path")
     {
         fileManager.deleteFile(arg);
-        std::string init_info = get_init_info(fileManager, benewakeLidarManager);
+        std::string init_info = get_init_info(fileManager, benewakeLidarManager,tanwayLidarManager);
         return init_info;
     }
+    // 导出数据到u盘
     else if (cmd == "export_data_to_usb"){
-        std::string src_path = fileManager.getRootPath() + fileManager.getSavePath(1);
-        std::string dst_path = fileManager.create_usb_session_folder();
-        std::string ret_info = fileManager.move_folder_contents(src_path, dst_path);
         std::string return_info = "{status: 1 , error: }";
-        if (ret_info!=""){
-           return_info = "{status: 0 , error:"+ret_info+" }";
-        }    
+        if (fileManager.is_usb_inserted()){
+            std::string src_path = fileManager.getSavePath();
+            std::string dst_path = fileManager.get_usb_session_folder();
+            std::string ret_info = fileManager.move_folder_contents(src_path, dst_path);
+            if (ret_info!=""){
+               return_info = "{status: 0 , error:"+ret_info+" }";
+            }    
+        }else{
+               return_info = "{status: 0 , error: U盘没有挂载 }";
+        }
         return return_info;
     }
+    // 结束服务
     else if (cmd == "close")
     {
         Config::stopRun = false;

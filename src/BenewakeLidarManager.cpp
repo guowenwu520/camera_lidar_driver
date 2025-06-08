@@ -72,11 +72,6 @@ void BenewakeLidarManager::stop()
         lidar->stop();
 }
 
-std::string BenewakeLidarManager::getSave_Path()
-{
-    return dir;
-}
-
 void BenewakeLidarManager::main_loop()
 {
     int cur_frame = 0;
@@ -85,7 +80,7 @@ void BenewakeLidarManager::main_loop()
     int nFrame = 0;
     Config::running = true;
 
-    dir = fileManager.getSavePath(1);
+    dir = fileManager.get_256_lidar_save_path();
     if (dir.length() <= 0)
     {
         std::cout << "select save_path" << std::endl;
