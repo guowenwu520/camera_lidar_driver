@@ -32,7 +32,7 @@ protected:
     // Callbacks from ILidarObserver
     virtual void OnPointCloud(const LidarInfo &info, const UserPointCloud &cloud) override;
     virtual void OnException(const LidarInfo &info, const Exception &e) override;
-      virtual void OnIMU(const LidarInfo &lidarInfo, const IMUData &imu) override;
+    virtual void OnIMU(const LidarInfo &lidarInfo, const IMUData &imu) override;
     virtual void OnDeviceInfoFrame(const LidarInfo &info, const DeviceInfoFrame &deviceInfoFrame) override;
     virtual void OnParsePcapProcess(const LidarInfo &info, int process, uint64_t frame, uint64_t stamp) override;
 

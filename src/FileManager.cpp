@@ -19,7 +19,6 @@ void FileManager::setSavePath(std::string name)
 
 int FileManager::getPathCount(std::string dir)
 {
-    dir = root_path + dir;
     std::vector<std::string> current_files = get_subdirectories(dir);
     int number = 0;
     for (const auto& file : current_files)
@@ -141,7 +140,6 @@ void FileManager::savePointCloudAsKITTI(const benewake::BwPointCloud::Ptr &cloud
         dir = dir + "/" + std::to_string(number) + "/velodyne";
 
     createDirectory(dir);
-    dir = root_path + dir;
 
     std::ostringstream oss;
     oss << dir << "/frame_" << std::setw(6) << std::setfill('0') << frameNum << ".bin";

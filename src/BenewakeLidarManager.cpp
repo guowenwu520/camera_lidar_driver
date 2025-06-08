@@ -71,7 +71,6 @@ void BenewakeLidarManager::stop()
     if (lidar)
         lidar->stop();
 }
-
 void BenewakeLidarManager::main_loop()
 {
     int cur_frame = 0;
@@ -88,6 +87,11 @@ void BenewakeLidarManager::main_loop()
     }
 
     int number = fileManager.getPathCount(dir);
+
+    // 帧率统计变量
+    int frame_counter = 0;
+    auto last_time = std::chrono::steady_clock::now();
+
     while (Config::running)
     {
         bool ok = lidar->getData(pointCloud, nFrame, sys_info);
@@ -103,7 +107,19 @@ void BenewakeLidarManager::main_loop()
             pool->enqueue([=]
                           { fileManager.savePointCloudAsKITTI(pointCloud, number, dir, cur_frame); });
             cur_frame++;
+            frame_counter++;
+        }
+
+        // 每秒打印一次帧率
+        auto now = std::chrono::steady_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::seconds>(now - last_time);
+        if (duration.count() >= 1)
+        {
+            std::cout << "[FPS] Saving point clouds at: " << frame_counter << " frames/sec" << std::endl;
+            frame_counter = 0;
+            last_time = now;
         }
     }
+
     Config::running = false;
 }

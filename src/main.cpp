@@ -34,18 +34,18 @@ int main(int argc, char **argv)
 	SocketClient client("127.0.0.1", 8081);
 	if (client.connect_to_server())
 	{
-		client.send_message("create_path:ram");
+		client.send_message("create_path:am");
 		client.receive_response();
 
-		client.send_message("select_path:ram");
+		client.send_message("select_path:am");
 		client.receive_response();
 
 		
-		client.send_message("64_line_ladar_start");
+		client.send_message("256_line_ladar_start");
 		client.receive_response();
 
 		std::this_thread::sleep_for(std::chrono::seconds(16));
-		client.send_message("64_line_ladar_end");
+		client.send_message("256_line_ladar_end");
 		client.receive_response();
 
         client.send_message("export_data_to_usb");
