@@ -4,8 +4,8 @@
 #include <sstream>
 #include <iomanip>
 
-BenewakeLidarManager::BenewakeLidarManager(FileManager fileManager, const std::string &ip, int port)
-    : lidar_ip(ip), lidar_port(port), save_enabled(false), fileManager(fileManager)
+BenewakeLidarManager::BenewakeLidarManager(int client_socket,FileManager fileManager, const std::string &ip, int port)
+    : lidar_ip(ip), lidar_port(port), save_enabled(false), fileManager(fileManager),client_socket(client_socket)
 {
 }
 
@@ -87,7 +87,11 @@ void BenewakeLidarManager::main_loop()
     }
 
     int number = fileManager.getPathCount(dir);
-
+    if (number < 10)
+        dir = dir + "/0" + std::to_string(number) + "/velodyne";
+    else
+        dir = dir + "/" + std::to_string(number) + "/velodyne";
+    fileManager.createDirectory(dir,false);
     // 帧率统计变量
     int frame_counter = 0;
     auto last_time = std::chrono::steady_clock::now();
@@ -101,15 +105,24 @@ void BenewakeLidarManager::main_loop()
             std::cerr << "[ERROR] LIDAR data failed, code: " << err << std::endl;
             continue;
         }
+        std::ostringstream oss;
 
         if (pointCloud->points.size() > 0)
         {
+            oss << dir << "/frame_" << std::setw(6) << std::setfill('0') << cur_frame << ".bin";
+            std::string path = oss.str();
             pool->enqueue([=]
-                          { fileManager.savePointCloudAsKITTI(pointCloud, number, dir, cur_frame); });
+                          { 
+                              fileManager.savePointCloudAsKITTI(pointCloud, path);
+                              std::string return_info = "{status: 1, log: " + path +
+                                                            "}\n";
+                               send(client_socket, return_info.c_str(), return_info.size(), 0);
+                             });
             cur_frame++;
             frame_counter++;
         }
 
+       
         // 每秒打印一次帧率
         auto now = std::chrono::steady_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::seconds>(now - last_time);

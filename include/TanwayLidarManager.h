@@ -16,7 +16,7 @@ using namespace tanway;
 class TanwayLidarManager : public ILidarObserver
 {
 public:
-    TanwayLidarManager(FileManager fileManager,
+    TanwayLidarManager(int client_socket,FileManager fileManager,
                        const std::string &local_ip="192.168.111.204",
                        const std::string &lidar_ip="192.168.111.51",
                        const std::string &algo_config_path="/root/workspace/camera_lidar_driver/tanwaylidar/config/algo_table.json");
@@ -42,6 +42,7 @@ private:
     std::string lidar_ip;
     std::string algo_config_path;
     std::string save_dir;
+    int client_socket;
 
     std::shared_ptr<ILidarDevice> lidar;
     std::shared_ptr<ILidarAlgo> algo;

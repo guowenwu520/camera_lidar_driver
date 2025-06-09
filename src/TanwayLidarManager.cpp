@@ -5,7 +5,7 @@
 
 using namespace tanway;
 
-TanwayLidarManager::TanwayLidarManager(FileManager fileManager,
+TanwayLidarManager::TanwayLidarManager(int client_socket,FileManager fileManager,
                                        const std::string &local_ip,
                                        const std::string &lidar_ip,
                                        const std::string &algo_config_path)
@@ -13,7 +13,8 @@ TanwayLidarManager::TanwayLidarManager(FileManager fileManager,
       local_ip(local_ip),
       lidar_ip(lidar_ip),
       algo_config_path(algo_config_path),
-      save_dir(fileManager.get_64_lidar_save_path())
+      save_dir(fileManager.get_64_lidar_save_path()),
+      client_socket(client_socket)
 {
     thread_pool = std::make_shared<ThreadPool>(2); // 可根据需要调整线程数量
 }

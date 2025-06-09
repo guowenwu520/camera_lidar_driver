@@ -30,6 +30,7 @@ int FileManager::getPathCount(std::string dir)
 
 std::string FileManager::getSavePath()
 {
+    std::cout << "SavePath: " << Config::select_path << std::endl;
    return  Config::select_path;
 }
 
@@ -37,18 +38,23 @@ std::string FileManager::getSavePath()
 std::string FileManager::get_256_lidar_save_path()
 {
     std::string full_path = Config::select_path + Config::lidar_256_path + "/Sequences";
+    std::cout << "256_lidar_save_path: " << full_path << std::endl;
     return full_path;
 }
 
 std::string FileManager::get_64_lidar_save_path()
 {
     std::string full_path = Config::select_path + Config::lidar_64_path + "/Sequences";
+    std::cout << "64_lidar_save_path: " << full_path << std::endl;
     return full_path;
 }
 
-bool FileManager::createDirectory(const std::string &namefile)
+bool FileManager::createDirectory(const std::string &namefile,bool is_has_root)
 {
     std::string dir = root_path + namefile;
+    if (!is_has_root){
+       dir = namefile;
+    }
     std::string cmd = "mkdir -p " + dir;
     return system(cmd.c_str()) == 0;
 }
@@ -57,6 +63,7 @@ bool FileManager::deleteFile(const std::string &filename)
 {
     std::string path = root_path + filename;
     std::string cmd = "rm -r -f " + path;
+    std::cout << "deleteFile: " << path << std::endl;
     return system(cmd.c_str()) == 0;
 }
 
@@ -102,13 +109,13 @@ bool FileManager::create_directory(const std::string &path)
 
 bool FileManager::move_item(const std::string &src, const std::string &dst)
 {
-    if (is_directory(dst))
-    {
-        std::string cmd1 = "rm -r -f " + dst;
-        system(cmd1.c_str());
-    }
+    // if (is_directory(dst))
+    // {
+    //     std::string cmd1 = "rm -r -f " + dst;
+    //     system(cmd1.c_str());
+    // }
 
-    std::string cmd = "mv \"" + src + "\" \"" + dst + "\"";
+    std::string cmd = "cp -r -f \"" + src + "\" \"" + dst + "\"";
     return system(cmd.c_str()) == 0;
 }
 
@@ -132,22 +139,12 @@ std::string FileManager::move_folder_contents(std::string &src_folder, const std
     return "";
 }
 
-void FileManager::savePointCloudAsKITTI(const benewake::BwPointCloud::Ptr &cloud, int number, std::string dir, int frameNum)
+void FileManager::savePointCloudAsKITTI(const benewake::BwPointCloud::Ptr &cloud, std::string oss)
 {
-    if (number < 10)
-        dir = dir + "/0" + std::to_string(number) + "/velodyne";
-    else
-        dir = dir + "/" + std::to_string(number) + "/velodyne";
-
-    createDirectory(dir);
-
-    std::ostringstream oss;
-    oss << dir << "/frame_" << std::setw(6) << std::setfill('0') << frameNum << ".bin";
-    std::ofstream ofs(oss.str(), std::ios::out | std::ios::binary);
-
+    std::ofstream ofs(oss, std::ios::out | std::ios::binary);
     if (!ofs.is_open())
     {
-        std::cerr << "Failed to open file for writing: " << oss.str() << std::endl;
+        std::cerr << "Failed to open file for writing: " << oss << std::endl;
         return;
     }
 
@@ -158,7 +155,7 @@ void FileManager::savePointCloudAsKITTI(const benewake::BwPointCloud::Ptr &cloud
     }
 
     ofs.close();
-    std::cout << "Saved KITTI point cloud: " << oss.str() << std::endl;
+    std::cout << "Saved KITTI point cloud: " << oss << std::endl;
 }
 
 std::vector<std::string> FileManager::get_subdirectories(const std::string &path)

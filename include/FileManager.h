@@ -28,7 +28,7 @@ public:
     std::string get_256_lidar_save_path();
     std::string get_64_lidar_save_path();
 
-    bool createDirectory(const std::string &namefile);
+    bool createDirectory(const std::string &namefile,bool is_has_root = true);
     bool deleteFile(const std::string &filename);
     bool is_usb_inserted();
     std::string get_usb_session_folder();
@@ -38,7 +38,7 @@ public:
     bool move_item(const std::string &src, const std::string &dst);
     std::string move_folder_contents(std::string &src_folder, const std::string &dst_folder);
 
-    void savePointCloudAsKITTI(const benewake::BwPointCloud::Ptr &cloud, int number, std::string dir, int frameNum);
+    void savePointCloudAsKITTI(const benewake::BwPointCloud::Ptr &cloud, std::string oss);
 
 private:
     static std::vector<std::string> get_subdirectories(const std::string &path);

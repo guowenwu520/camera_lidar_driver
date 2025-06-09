@@ -78,9 +78,9 @@ void SocketServer::start()
 
     std::cout << "Client connected!" << std::endl;
     FileManager fileManager = FileManager();
-    BenewakeLidarManager benewakeLidarManager = BenewakeLidarManager(fileManager);
+    BenewakeLidarManager benewakeLidarManager = BenewakeLidarManager(client_fd,fileManager);
     benewakeLidarManager.initialize();
-    TanwayLidarManager tanwayLidarManager = TanwayLidarManager(fileManager);
+    TanwayLidarManager tanwayLidarManager = TanwayLidarManager(client_fd,fileManager);
     tanwayLidarManager.initialize();
     std::string init_info = get_init_info(fileManager, benewakeLidarManager,tanwayLidarManager);
     send(client_fd, init_info.c_str(), init_info.size(), 0);
@@ -109,7 +109,7 @@ void SocketServer::handle_client(int client_socket, FileManager &fileManager,Ben
 
 std::string SocketServer::dealTanwayLidar(TanwayLidarManager &tanwayLidarManager,  std::string save_path, bool isStart)
 {
-    std::string status = "1", error = "";
+    std::string status = "1", error = "",info="";
 
     if (tanwayLidarManager.hasLidar())
     {
@@ -118,9 +118,11 @@ std::string SocketServer::dealTanwayLidar(TanwayLidarManager &tanwayLidarManager
             std::thread task_thread([&tanwayLidarManager]()
                                     { tanwayLidarManager.start(); });
             task_thread.detach(); // 后台运行
+            info ="开始采集";
         }
         else
         {
+            info = "结束采集";
             tanwayLidarManager.stop();
         }
     }
@@ -132,7 +134,7 @@ std::string SocketServer::dealTanwayLidar(TanwayLidarManager &tanwayLidarManager
 
     std::string return_info = "{status: " + status +
                               ", path: " + save_path +
-                              ", log: " + "\"nono\"" +
+                              ", log: " + info +
                               ", error: " + "\"" + error + "\"" +
                               "}";
 
@@ -142,7 +144,7 @@ std::string SocketServer::dealTanwayLidar(TanwayLidarManager &tanwayLidarManager
 
 std::string SocketServer::dealBeneWakeLidar(BenewakeLidarManager &benewakeLidarManager, std::string save_path, bool isStart)
 {
-    std::string status = "1", error = "";
+    std::string status = "1", error = "",info="";
 
     if (benewakeLidarManager.hasLidar())
     {
@@ -151,9 +153,11 @@ std::string SocketServer::dealBeneWakeLidar(BenewakeLidarManager &benewakeLidarM
             std::thread task_thread([&benewakeLidarManager]()
                                     { benewakeLidarManager.start(); });
             task_thread.detach(); // 后台运行
+            info ="开始采集";
         }
         else
         {
+            info = "结束采集";
             benewakeLidarManager.stop();
         }
     }
@@ -164,7 +168,7 @@ std::string SocketServer::dealBeneWakeLidar(BenewakeLidarManager &benewakeLidarM
     }
     std::string return_info = "{status: " + status +
                               ", path: " + save_path +
-                              ", log: " + "nono" +
+                              ", log: " + info +
                               ", error: " + error +
                               "}";
     return return_info;
