@@ -78,7 +78,6 @@ void BenewakeLidarManager::main_loop()
     benewake::SYS_INFO sys_info;
     int nFrame = 0;
     Config::running = true;
-
     dir = fileManager.get_256_lidar_save_path();
     if (dir.length() <= 0)
     {
@@ -113,8 +112,13 @@ void BenewakeLidarManager::main_loop()
             std::string path = oss.str();
             pool->enqueue([=]
                           { 
-                              fileManager.savePointCloudAsKITTI(pointCloud, path);
-                              std::string return_info = "{status: 1, log: " + path +
+                               std::vector<RadarPoint> cloud;
+                                cloud.reserve(pointCloud->points.size());
+                                for(const auto pt : pointCloud->points){
+                                    cloud.emplace_back(pt.x, pt.y, pt.z, pt.intensity); 
+                                }
+                              fileManager.savePointCloudAsKITTI(cloud, path);
+                              std::string return_info = "{status: 1, log: [BenewakeLidar] Save path: " + path +
                                                             "}\n";
                                send(client_socket, return_info.c_str(), return_info.size(), 0);
                              });

@@ -11,6 +11,7 @@
 #include "ILidarAlgo.h"
 #include "FileManager.h"
 #include "ThreadPool.h"
+#include <vector>
 
 using namespace tanway;
 class TanwayLidarManager : public ILidarObserver
@@ -43,7 +44,7 @@ private:
     std::string algo_config_path;
     std::string save_dir;
     int client_socket;
-
+    int cur_frame;
     std::shared_ptr<ILidarDevice> lidar;
     std::shared_ptr<ILidarAlgo> algo;
     std::shared_ptr<ThreadPool> thread_pool;

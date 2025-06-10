@@ -6,6 +6,7 @@
 #include <queue>
 #include <thread>
 #include <mutex>
+#include <vector>
 #include <condition_variable>
 
 #include "benewake_lidar_driver.h"

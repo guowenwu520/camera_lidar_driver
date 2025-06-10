@@ -27,25 +27,25 @@ int main(int argc, char **argv)
  } });
 
 	// 稍等服务器启动
-	// std::this_thread::sleep_for(std::chrono::seconds(2));
+	std::this_thread::sleep_for(std::chrono::seconds(2));
 
 	// 客户端交互
 
 	// SocketClient client("127.0.0.1", 8081);
 	// if (client.connect_to_server())
 	// {
-	// 	client.send_message("create_path:aim");
+	// 	client.send_message("create_path:m6");
 	// 	client.receive_response();
 
-	// 	client.send_message("select_path:aim");
+	// 	client.send_message("select_path:m6");
 	// 	client.receive_response();
 
 		
-	// 	client.send_message("256_line_ladar_start");
+	// 	client.send_message("together_start");
 	// 	client.receive_response();
 
 	// 	std::this_thread::sleep_for(std::chrono::seconds(16));
-	// 	client.send_message("256_line_ladar_end");
+	// 	client.send_message("together_end");
 	// 	client.receive_response();
 
     //     client.send_message("export_data_to_usb");

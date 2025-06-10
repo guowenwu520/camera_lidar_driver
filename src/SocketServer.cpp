@@ -201,10 +201,14 @@ std::string SocketServer::process_command(const std::string &command,
     // 同时采集
     else if (cmd == "together_start")
     {
+        dealTanwayLidar(tanwayLidarManager,fileManager.get_64_lidar_save_path(), true);
+        dealBeneWakeLidar(benewakeLidarManager,fileManager.get_256_lidar_save_path(), true);
         return "Hello Client!\n";
     }
     else if (cmd == "together_end")
     {
+        dealTanwayLidar(tanwayLidarManager,fileManager.get_64_lidar_save_path(), false);
+        dealBeneWakeLidar(benewakeLidarManager,fileManager.get_256_lidar_save_path(), false);
         return "Goodbye Client!\n";
     }
     // 创建保存目录

@@ -14,7 +14,25 @@
 
 #include "Globals.h"
 #include "benewake_lidar_driver.h"
+#include <vector>
+#include <cmath> 
 
+// 定义单个雷达点的结构体（可根据需求扩展字段）
+struct RadarPoint {
+    float x;        // X 坐标（米）
+    float y;        // Y 坐标（米）
+    float z;        // Z 坐标（米）
+    float intensity;// 回波强度（0-255 或浮点值，取决于传感器）
+    float range;    // 到雷达的距离（米，可选，可由 x,y,z 计算）
+    float azimuth;  // 方位角（弧度，可选）
+    float velocity; // 径向速度（米/秒，可选）
+
+    // 构造函数（方便初始化）
+    RadarPoint(float x_, float y_, float z_, float intensity_, 
+               float range_ = 0, float azimuth_ = 0, float velocity_ = 0)
+        : x(x_), y(y_), z(z_), intensity(intensity_), 
+          range(range_), azimuth(azimuth_), velocity(velocity_) {}
+};
 class FileManager
 {
 public:
@@ -38,7 +56,7 @@ public:
     bool move_item(const std::string &src, const std::string &dst);
     std::string move_folder_contents(std::string &src_folder, const std::string &dst_folder);
 
-    void savePointCloudAsKITTI(const benewake::BwPointCloud::Ptr &cloud, std::string oss);
+    void savePointCloudAsKITTI(const std::vector<RadarPoint>& cloud, std::string oss);
 
 private:
     static std::vector<std::string> get_subdirectories(const std::string &path);

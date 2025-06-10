@@ -139,7 +139,7 @@ std::string FileManager::move_folder_contents(std::string &src_folder, const std
     return "";
 }
 
-void FileManager::savePointCloudAsKITTI(const benewake::BwPointCloud::Ptr &cloud, std::string oss)
+void FileManager::savePointCloudAsKITTI(const std::vector<RadarPoint>& cloud, std::string oss)
 {
     std::ofstream ofs(oss, std::ios::out | std::ios::binary);
     if (!ofs.is_open())
@@ -147,13 +147,18 @@ void FileManager::savePointCloudAsKITTI(const benewake::BwPointCloud::Ptr &cloud
         std::cerr << "Failed to open file for writing: " << oss << std::endl;
         return;
     }
-
-    for (const auto &pt : cloud->points)
-    {
-        float data[4] = {pt.x, pt.y, pt.z, pt.intensity};
+    if (cloud.empty()) {
+        std::cerr << "Point cloud is empty!" << std::endl;
+        return;
+    }
+    for (const auto& point : cloud) {  
+        float x = point.x;
+        float y = point.y;
+        float z = point.z;
+        float intensity = point.intensity;
+        float data[4] = {x, y, z, intensity};
         ofs.write(reinterpret_cast<const char *>(data), sizeof(float) * 4);
     }
-
     ofs.close();
     std::cout << "Saved KITTI point cloud: " << oss << std::endl;
 }
